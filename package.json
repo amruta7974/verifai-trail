@@ -4,7 +4,7 @@
   "description": "VerifAI Trail — a compliance evidence layer for AI-driven lending decisions, built on the CooL SDK.",
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": "22.x"
   },
   "main": "api/index.js",
   "scripts": {
