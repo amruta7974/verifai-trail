@@ -1,0 +1,21 @@
+{
+  "name": "verifai-trail",
+  "version": "1.0.0",
+  "description": "VerifAI Trail — a compliance evidence layer for AI-driven lending decisions, built on the CooL SDK.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "api/index.js",
+  "scripts": {
+    "start": "node api/index.js",
+    "dev": "node api/index.js"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "cool-nwc": "^3.0.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mongodb": "^7.6.0"
+  }
+}

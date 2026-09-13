@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VerifAI Trail — Compliance Evidence Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">V</span>
+        <div>
+          <div class="brand-name">VerifAI Trail</div>
+          <div class="brand-sub">Compliance evidence layer, built on CooL</div>
+        </div>
+      </div>
+      <div class="topbar-tag">Loan Decisioning &middot; Demo Bank of India</div>
+    </header>
+
+    <main class="layout">
+      <section class="panel form-panel">
+        <h2>New Loan Application</h2>
+        <p class="muted">
+          Run this through the automated decision engine. Every decision is
+          sealed into a CooL evidence receipt the moment it's made.
+        </p>
+        <form id="decision-form">
+          <label
+            >Applicant name
+            <input
+              type="text"
+              id="applicantName"
+              required
+              placeholder="e.g. Rohan Deshmukh"
+            />
+          </label>
+          <label
+            >Monthly income (₹)
+            <input type="number" id="income" required placeholder="65000" />
+          </label>
+          <label
+            >Credit score
+            <input
+              type="number"
+              id="creditScore"
+              required
+              placeholder="742"
+              min="300"
+              max="900"
+            />
+          </label>
+          <label
+            >Requested amount (₹)
+            <input
+              type="number"
+              id="requestedAmount"
+              required
+              placeholder="250000"
+            />
+          </label>
+          <button type="submit">Run AI Decision</button>
+        </form>
+        <div id="decision-result" class="decision-result hidden"></div>
+
+        <div class="quickfill">
+          <div class="muted small">Quick fill:</div>
+          <button class="ghost-btn" data-preset="approve">
+            Likely approve
+          </button>
+          <button class="ghost-btn" data-preset="review">Borderline</button>
+          <button class="ghost-btn" data-preset="reject">Likely reject</button>
+        </div>
+      </section>
+
+      <section class="panel ledger-panel">
+        <div class="ledger-head">
+          <h2>Evidence Ledger</h2>
+          <div>
+            <button id="seed-btn" class="ghost-btn">Seed demo data</button>
+            <button id="refresh-btn" class="ghost-btn">Refresh</button>
+            <button id="reset-btn" class="danger">Reset</button>
+          </div>
+        </div>
+        <p class="muted">
+          Every row here is a real <code>cool.record()</code> receipt. Nothing
+          about the applicant is stored in it — only a salted commitment.
+        </p>
+        <div id="ledger-list" class="ledger-list"></div>
+      </section>
+    </main>
+
+    <div id="verify-modal" class="modal hidden">
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3 id="modal-title">Verification Result</h3>
+          <button id="modal-close" class="icon-btn">&times;</button>
+        </div>
+        <div id="modal-body"></div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
