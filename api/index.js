@@ -22,13 +22,57 @@ function maskApplicant(name) {
 }
 
 function decide({ income, creditScore, requestedAmount }) {
-  if (creditScore >= 720 && requestedAmount <= income * 5) {
-    return { decision: "APPROVED", reason: "Strong credit score and requested amount within income multiple." };
+  const maxAutoApprovalAmount = income * 5;
+
+  const creditPass = creditScore >= 720;
+  const amountPass = requestedAmount <= maxAutoApprovalAmount;
+
+  if (creditPass && amountPass) {
+    return {
+      decision: "APPROVED",
+      reason:
+        "Strong credit score and requested amount within income multiple.",
+      explanation: {
+        creditScore,
+        creditThreshold: 720,
+        creditPass,
+        monthlyIncome: income,
+        requestedAmount,
+        maxAutoApprovalAmount,
+        amountPass,
+      },
+    };
   }
+
   if (creditScore >= 650) {
-    return { decision: "FLAGGED_FOR_REVIEW", reason: "Borderline credit score — routed to a human underwriter." };
+    return {
+      decision: "FLAGGED_FOR_REVIEW",
+      reason: "Borderline credit score — routed to a human underwriter.",
+      explanation: {
+        creditScore,
+        creditThreshold: 720,
+        creditPass,
+        monthlyIncome: income,
+        requestedAmount,
+        maxAutoApprovalAmount,
+        amountPass,
+      },
+    };
   }
-  return { decision: "REJECTED", reason: "Credit score below the automated approval threshold." };
+
+  return {
+    decision: "REJECTED",
+    reason: "Credit score below the automated approval threshold.",
+    explanation: {
+      creditScore,
+      creditThreshold: 720,
+      creditPass,
+      monthlyIncome: income,
+      requestedAmount,
+      maxAutoApprovalAmount,
+      amountPass,
+    },
+  };
 }
 
 async function sealDecision(input) {
@@ -37,7 +81,11 @@ async function sealDecision(input) {
 
   const { evidence, recordId } = await cool.record({
     type: "loan.decision",
-    metadata: { model: "loan-scorer", version: modelVersion, decision: outcome.decision },
+    metadata: {
+      model: "loan-scorer",
+      version: modelVersion,
+      decision: outcome.decision,
+    },
     payloads: {
       input: JSON.stringify(input),
       output: JSON.stringify(outcome),
@@ -50,7 +98,9 @@ async function sealDecision(input) {
     requestedAmount: input.requestedAmount,
     decision: outcome.decision,
     reason: outcome.reason,
+    explanation: outcome.explanation,
     model: modelVersion,
+    originalMetadataHash: evidence.record.event.metadata_hash,
     timestamp: new Date().toISOString(),
     evidence,
     tampered: false,
@@ -60,10 +110,23 @@ async function sealDecision(input) {
 app.post("/api/decide", async (req, res) => {
   try {
     const { applicantName, income, creditScore, requestedAmount } = req.body;
-    if (!applicantName || income == null || creditScore == null || requestedAmount == null) {
-      return res.status(400).json({ error: "Missing applicantName, income, creditScore, or requestedAmount." });
+    if (
+      !applicantName ||
+      income == null ||
+      creditScore == null ||
+      requestedAmount == null
+    ) {
+      return res.status(400).json({
+        error:
+          "Missing applicantName, income, creditScore, or requestedAmount.",
+      });
     }
-    const record = await sealDecision({ applicantName, income, creditScore, requestedAmount });
+    const record = await sealDecision({
+      applicantName,
+      income,
+      creditScore,
+      requestedAmount,
+    });
 
     const db = await getDb();
     await db.collection("decisions").insertOne(record);
@@ -73,6 +136,7 @@ app.post("/api/decide", async (req, res) => {
       applicant: record.applicant,
       decision: record.decision,
       reason: record.reason,
+      explanation: record.explanation,
       model: record.model,
       timestamp: record.timestamp,
     });
@@ -99,9 +163,14 @@ app.get("/api/decisions", async (req, res) => {
 app.get("/api/receipt/:id", async (req, res) => {
   try {
     const db = await getDb();
-    const record = await db.collection("decisions").findOne({ id: req.params.id });
+    const record = await db
+      .collection("decisions")
+      .findOne({ id: req.params.id });
     if (!record) return res.status(404).json({ error: "Not found" });
-    res.setHeader("Content-Disposition", `attachment; filename="${record.id}.evidence.json"`);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${record.id}.evidence.json"`,
+    );
     res.json(record.evidence);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -111,7 +180,9 @@ app.get("/api/receipt/:id", async (req, res) => {
 app.get("/api/receipt/:id/view", async (req, res) => {
   try {
     const db = await getDb();
-    const record = await db.collection("decisions").findOne({ id: req.params.id });
+    const record = await db
+      .collection("decisions")
+      .findOne({ id: req.params.id });
     if (!record) return res.status(404).json({ error: "Not found" });
     res.json(record.evidence);
   } catch (err) {
@@ -122,7 +193,9 @@ app.get("/api/receipt/:id/view", async (req, res) => {
 app.post("/api/verify/:id", async (req, res) => {
   try {
     const db = await getDb();
-    const record = await db.collection("decisions").findOne({ id: req.params.id });
+    const record = await db
+      .collection("decisions")
+      .findOne({ id: req.params.id });
     if (!record) return res.status(404).json({ error: "Not found" });
     const verdict = await verifyEvidence(record.evidence);
     res.json(verdict);
@@ -134,17 +207,22 @@ app.post("/api/verify/:id", async (req, res) => {
 app.post("/api/tamper/:id", async (req, res) => {
   try {
     const db = await getDb();
-    const record = await db.collection("decisions").findOne({ id: req.params.id });
+    const record = await db
+      .collection("decisions")
+      .findOne({ id: req.params.id });
     if (!record) return res.status(404).json({ error: "Not found" });
 
     const ev = JSON.parse(JSON.stringify(record.evidence));
     const h = ev.record.event.metadata_hash;
-    ev.record.event.metadata_hash = h.slice(0, -1) + (h.slice(-1) === "a" ? "b" : "a");
+    ev.record.event.metadata_hash =
+      h.slice(0, -1) + (h.slice(-1) === "a" ? "b" : "a");
 
-    await db.collection("decisions").updateOne(
-      { id: req.params.id },
-      { $set: { evidence: ev, tampered: true } }
-    );
+    await db
+      .collection("decisions")
+      .updateOne(
+        { id: req.params.id },
+        { $set: { evidence: ev, tampered: true } },
+      );
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -164,9 +242,24 @@ app.post("/api/reset", async (req, res) => {
 app.post("/api/seed-demo", async (req, res) => {
   try {
     const scenarios = [
-      { applicantName: "Vikram Salunkhe", income: 22000, creditScore: 590, requestedAmount: 400000 },
-      { applicantName: "Sneha Kulkarni", income: 40000, creditScore: 671, requestedAmount: 180000 },
-      { applicantName: "Rohan Deshmukh", income: 85000, creditScore: 762, requestedAmount: 300000 },
+      {
+        applicantName: "Vikram Salunkhe",
+        income: 22000,
+        creditScore: 590,
+        requestedAmount: 400000,
+      },
+      {
+        applicantName: "Sneha Kulkarni",
+        income: 40000,
+        creditScore: 671,
+        requestedAmount: 180000,
+      },
+      {
+        applicantName: "Rohan Deshmukh",
+        income: 85000,
+        creditScore: 762,
+        requestedAmount: 300000,
+      },
     ];
     const db = await getDb();
     const records = [];
@@ -185,7 +278,9 @@ app.post("/api/seed-demo", async (req, res) => {
 // sets VERCEL=1 in its build/runtime environment.
 if (!process.env.VERCEL) {
   const PORT = process.env.PORT || 4000;
-  app.listen(PORT, () => console.log(`VerifAI Trail demo running on http://localhost:${PORT}`));
+  app.listen(PORT, () =>
+    console.log(`VerifAI Trail demo running on http://localhost:${PORT}`),
+  );
 }
 
 export default app;

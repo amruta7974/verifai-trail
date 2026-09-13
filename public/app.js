@@ -54,12 +54,52 @@ form.addEventListener("submit", async (e) => {
     return;
   }
   resultBox.className = `decision-result ${data.decision}`;
+
+  const x = data.explanation;
+
   resultBox.innerHTML = `
-    <span class="badge">${data.decision.replace(/_/g, " ")}</span>
-    ${data.reason}<br/><br/>
-    Evidence sealed \u2014 record ID:<br/>
+  <span class="badge">${data.decision.replace(/_/g, " ")}</span>
+
+  <div class="decision-reason">${data.reason}</div>
+
+  <div class="explanation-title">Why this decision?</div>
+
+  <div class="explanation-grid">
+    <div>
+      <span>Credit score</span>
+      <strong>${x.creditScore}</strong>
+      <small>${x.creditPass ? "✓ Above 720" : "✗ Below 720"}</small>
+    </div>
+
+    <div>
+      <span>Monthly income</span>
+      <strong>₹${x.monthlyIncome.toLocaleString("en-IN")}</strong>
+    </div>
+
+    <div>
+      <span>Requested amount</span>
+      <strong>₹${x.requestedAmount.toLocaleString("en-IN")}</strong>
+      <small>${x.amountPass ? "✓ Within limit" : "✗ Above limit"}</small>
+    </div>
+
+    <div>
+      <span>Auto-approval limit</span>
+      <strong>₹${x.maxAutoApprovalAmount.toLocaleString("en-IN")}</strong>
+      <small>5 × monthly income</small>
+    </div>
+  </div>
+
+  <div class="decision-policy">
+    <strong>Decision policy</strong><br>
+    Credit score ≥ 720 AND requested amount ≤ 5× monthly income
+  </div>
+
+  <div class="evidence-sealed">
+    ✓ Evidence sealed · ${data.model}
     <span class="record-id">${data.id}</span>
-  `;
+  </div>
+`;
+
   loadLedger();
 });
 
@@ -204,9 +244,14 @@ function checkRow(name, check) {
 
 function showVerdict(verdict) {
   document.getElementById("modal-title").textContent = "Verification Result";
+
   const banner = verdict.ok
-    ? `<div class="verdict-banner pass">\u2713 VERIFIED \u2014 this receipt is authentic and unaltered</div>`
-    : `<div class="verdict-banner fail">\u2717 FAILED \u2014 this receipt does not check out</div>`;
+    ? `<div class="verdict-banner pass">
+        ✓ VERIFIED — this receipt is authentic and unaltered
+       </div>`
+    : `<div class="verdict-banner fail">
+        ✗ TAMPERING DETECTED — receipt integrity failed
+       </div>`;
 
   const checks = Object.entries(verdict.checks)
     .map(([name, check]) => checkRow(name, check))
@@ -214,10 +259,117 @@ function showVerdict(verdict) {
 
   const reasons =
     verdict.reasons && verdict.reasons.length
-      ? `<div class="reasons"><strong>Why it failed:</strong><ul>${verdict.reasons.map((r) => `<li>${r}</li>`).join("")}</ul></div>`
+      ? `<div class="reasons">
+          <strong>Why it failed:</strong>
+          <ul>
+            ${verdict.reasons.map((r) => `<li>${r}</li>`).join("")}
+          </ul>
+        </div>`
       : "";
 
-  modalBody.innerHTML = banner + checks + reasons;
+  const timeline = `
+    <div class="audit-section">
+      <div class="audit-title">Audit timeline</div>
+
+      <div class="timeline">
+
+        <div class="timeline-item done">
+          <span>✓</span>
+          <div>
+            <strong>Application received</strong>
+            <small>Loan application entered into the decision engine</small>
+          </div>
+        </div>
+
+        <div class="timeline-item done">
+          <span>✓</span>
+          <div>
+            <strong>AI decision generated</strong>
+            <small>Decision and model version recorded</small>
+          </div>
+        </div>
+
+        <div class="timeline-item done">
+          <span>✓</span>
+          <div>
+            <strong>Evidence sealed</strong>
+            <small>Cryptographic CooL receipt created</small>
+          </div>
+        </div>
+
+        ${
+          verdict.ok
+            ? `
+              <div class="timeline-item done">
+                <span>✓</span>
+                <div>
+                  <strong>Integrity verified</strong>
+                  <small>All verification checks passed</small>
+                </div>
+              </div>
+            `
+            : `
+              <div class="timeline-item danger-item">
+                <span>!</span>
+                <div>
+                  <strong>Receipt integrity changed</strong>
+                  <small>Stored evidence no longer matches its original commitment</small>
+                </div>
+              </div>
+
+              <div class="timeline-item danger-item">
+                <span>✗</span>
+                <div>
+                  <strong>Verification failed</strong>
+                  <small>Tampering was detected</small>
+                </div>
+              </div>
+            `
+        }
+
+      </div>
+    </div>
+  `;
+
+  const tamperDiff = !verdict.ok
+    ? `
+      <div class="tamper-diff">
+        <div class="audit-title">Tamper detection</div>
+
+        <div class="diff-row">
+          <span>Receipt status</span>
+          <strong class="diff-danger">MODIFIED</strong>
+        </div>
+
+        <div class="diff-row">
+          <span>Integrity</span>
+          <strong class="diff-danger">FAILED</strong>
+        </div>
+
+        <div class="diff-message">
+          A cryptographic value inside the receipt changed after
+          the evidence was sealed. The original evidence can no longer
+          be trusted.
+        </div>
+      </div>
+    `
+    : "";
+
+  modalBody.innerHTML = `
+    ${banner}
+
+    ${timeline}
+
+    ${tamperDiff}
+
+    <div class="audit-section">
+      <div class="audit-title">Verification checks</div>
+      ${checks}
+    </div>
+
+    ${reasons}
+  `;
+
   modal.classList.remove("hidden");
 }
 

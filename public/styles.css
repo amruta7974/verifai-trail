@@ -207,3 +207,217 @@ button[type="submit"]:hover { opacity: 0.9; }
 
 .ledger-head { align-items: center; }
 .ledger-head > div { display: flex; gap: 6px; }
+
+
+.decision-reason {
+  margin-bottom: 12px;
+}
+
+.explanation-title {
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.explanation-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.explanation-grid > div {
+  background: rgba(255,255,255,0.65);
+  border: 1px solid var(--cardline);
+  border-radius: 7px;
+  padding: 8px;
+}
+
+.explanation-grid span,
+.explanation-grid small {
+  display: block;
+  color: var(--gray);
+  font-size: 10px;
+}
+
+.explanation-grid strong {
+  display: block;
+  font-size: 13px;
+  margin: 2px 0;
+}
+
+.decision-policy {
+  padding: 9px;
+  border-radius: 7px;
+  background: white;
+  border: 1px solid var(--cardline);
+  font-size: 11px;
+  margin-bottom: 10px;
+}
+
+.evidence-sealed {
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.evidence-sealed .record-id {
+  display: block;
+  margin-top: 3px;
+}
+
+.audit-section {
+  margin-top: 16px;
+}
+
+.audit-title {
+  font-weight: bold;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.timeline {
+  border-left: 2px solid var(--cardline);
+  margin-left: 8px;
+  padding-left: 16px;
+}
+
+.timeline-item {
+  position: relative;
+  display: flex;
+  gap: 10px;
+  padding-bottom: 14px;
+}
+
+.timeline-item > span {
+  position: absolute;
+  left: -27px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--teal);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.timeline-item strong {
+  display: block;
+  font-size: 12px;
+}
+
+.timeline-item small {
+  color: var(--gray);
+  font-size: 10.5px;
+}
+
+.timeline-item.danger-item > span {
+  background: var(--red);
+}
+
+.tamper-diff {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid var(--red);
+  background: #fff5f7;
+  border-radius: 8px;
+}
+
+.diff-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid #f0ccd5;
+  font-size: 11.5px;
+}
+
+.diff-danger {
+  color: var(--red);
+}
+
+.diff-message {
+  margin-top: 10px;
+  font-size: 11px;
+  color: #8f2945;
+  line-height: 1.5;
+}
+
+.audit-section {
+  margin-top: 16px;
+}
+
+.audit-title {
+  font-weight: bold;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.timeline {
+  border-left: 2px solid var(--cardline);
+  margin-left: 8px;
+  padding-left: 16px;
+}
+
+.timeline-item {
+  position: relative;
+  display: flex;
+  gap: 10px;
+  padding-bottom: 14px;
+}
+
+.timeline-item > span {
+  position: absolute;
+  left: -27px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--teal);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.timeline-item strong {
+  display: block;
+  font-size: 12px;
+}
+
+.timeline-item small {
+  color: var(--gray);
+  font-size: 10.5px;
+}
+
+.timeline-item.danger-item > span {
+  background: var(--red);
+}
+
+.tamper-diff {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid var(--red);
+  background: #fff5f7;
+  border-radius: 8px;
+}
+
+.diff-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid #f0ccd5;
+  font-size: 11.5px;
+}
+
+.diff-danger {
+  color: var(--red);
+}
+
+.diff-message {
+  margin-top: 10px;
+  font-size: 11px;
+  color: #8f2945;
+  line-height: 1.5;
+}
